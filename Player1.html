@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <style media="screen">
+    body{
+      display:flex;
+      min-height: 100vh;
+      width:100%;
+      padding:0;
+      margin:0;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    #uploader{
+      -webkit-appearance:none;
+      appearance:none;
+      width: 50%;
+      margin-bottom: 10px;
+    }
+
+    button{
+      height: 80px;
+      width: 120px;
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+      background-color: red;
+      border: 5px solid blue;
+      margin: 10px;
+    }
+
+    #playerChoices{
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Player 1</h1>
+
+<div id="whosTurn"></div>
+
+<div id="playerChoices">
+  <div id="player1"></div>
+  <div id="player2"></div>
+</div>
+
+<div id="whoWon"></div>
+<br>
+<div id="score">
+  Score
+  <div id="wins">Wins: </div>
+  <div id="losses">Losses: </div>
+  <div id="ties">Ties: </div>
+</div>
+
+<button id="rock">Rock</button>
+<button id="paper">Paper</button>
+<button id="scissors">Scissors</button>
+<button id="newGame">New Game</button>
+
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/4.7.0/firebase.js"></script>
+<script>
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyB16f7GXSizmztc3ASl97C26QyWhsVBbQ8",
+    authDomain: "wenquickstart.firebaseapp.com",
+    databaseURL: "https://wenquickstart.firebaseio.com",
+    projectId: "wenquickstart",
+    storageBucket: "wenquickstart.appspot.com",
+    messagingSenderId: "601856403300"
+  };
+  firebase.initializeApp(config);
+
+  var dbRefPlayer1 = firebase.database().ref('player1Choice');
+  var dbRefPlayer2 = firebase.database().ref('player2Choice');
+  var dbRefPlayer1Turn = firebase.database().ref("player1Turn");
+  var dbRefPlayer2Turn = firebase.database().ref("player2Turn");
+  var dbRefResetGameP1 = firebase.database().ref("resetGameP1");
+  var dbRefResetGameP2 = firebase.database().ref("resetGameP2");
+  dbRefPlayer1.set("");
+  dbRefPlayer2.set("");
+  dbRefPlayer1Turn.set(false);
+  dbRefPlayer2Turn.set(false);
+  dbRefResetGameP1.set(true);
+  dbRefResetGameP2.set(false);
+  var player1Choice = "";
+  var player2Choice = "";
+  var player1Turn = false;
+  var player2Turn = false;
+  var resetGameP1 = false;
+  var resetGameP2 = false;
+  var wins = 0;
+  var losses = 0;
+  var ties = 0;
+
+  $('#rock').click(function(){
+    if(!player1Choice){
+      dbRefPlayer1.set('rock');
+      dbRefPlayer1Turn.set(true);
+      $('#paper').css('visibility', 'hidden');
+      $('#scissors').css('visibility', 'hidden');
+    }
+  })
+
+  $('#paper').click(function(){
+    if(!player1Choice){
+      dbRefPlayer1.set('paper');
+      dbRefPlayer1Turn.set(true);
+      $('#rock').css('visibility', 'hidden');
+      $('#scissors').css('visibility', 'hidden');
+    }
+  })
+  
+  $('#scissors').click(function(){
+    if(!player1Choice){
+      dbRefPlayer1.set('scissors');
+      dbRefPlayer1Turn.set(true);
+      $('#rock').css('visibility', 'hidden');
+      $('#paper').css('visibility', 'hidden');
+    }
+  })
+
+  dbRefPlayer1Turn.on('value', snap=>{
+    player1Turn = snap.val();
+    if(player1Turn && player2Turn){
+      console.log('both true');
+      $('#playerChoices').show();
+      if(
+        (player1Choice == 'rock' && player2Choice == 'scissors')||
+        (player1Choice == 'paper' && player2Choice == 'rock')||
+        (player1Choice == 'scissors' && player2Choice == 'paper')){
+        $('#whosTurn').text("You Win");
+        wins++;
+        updateScore();
+      }
+      else if(
+        (player1Choice == 'rock' && player2Choice == 'paper')||
+        (player1Choice == 'paper' && player2Choice == 'scissors')||
+        (player1Choice == 'scissors' && player2Choice == 'rock')){
+        $('#whosTurn').text("You Lose");
+        losses++;
+        updateScore();
+        }
+      else{
+        $('#whosTurn').text("Tie");
+        ties++;
+        updateScore();
+      }
+    }
+    else if(!player1Turn && player2Turn){
+      console.log('player1s turn');
+      $('#whosTurn').empty();
+      $('#whosTurn').text("It's Player 1's Turn!");
+    }
+    else if(player1Turn && !player2Turn){
+      console.log('player2s turn');
+      $('#whosTurn').empty();
+      $('#whosTurn').text("It's Player 2's Turn!");
+    }
+    else{
+      console.log('new game');
+      $('#whosTurn').empty();
+      $('#whosTurn').text("New Game!");
+    }
+  })
+
+  dbRefPlayer2Turn.on('value', snap=>{
+    player2Turn = snap.val();
+    if(player1Turn && player2Turn){
+      console.log('both true');
+      $('#playerChoices').show();
+      if(
+        (player1Choice == 'rock' && player2Choice == 'scissors')||
+        (player1Choice == 'paper' && player2Choice == 'rock')||
+        (player1Choice == 'scissors' && player2Choice == 'paper')){
+        $('#whosTurn').text("You Win");
+        wins++;
+        updateScore();
+      }
+      else if(
+        (player1Choice == 'rock' && player2Choice == 'paper')||
+        (player1Choice == 'paper' && player2Choice == 'scissors')||
+        (player1Choice == 'scissors' && player2Choice == 'rock')){
+        $('#whosTurn').text("You Lose");
+        losses++;
+        updateScore();
+        }
+      else{
+        $('#whosTurn').text("Tie");
+        ties++;
+        updateScore();
+      }
+    }
+    else if(!player1Turn && player2Turn){
+      console.log('player1s turn');
+      $('#whosTurn').empty();
+      $('#whosTurn').text("It's Player 1's Turn!");
+    }
+    else if(player1Turn && !player2Turn){
+      console.log('player2s turn');
+      $('#whosTurn').empty();
+      $('#whosTurn').text("It's Player 2's Turn!");
+    }
+    else{
+      console.log('new game');
+      $('#whosTurn').empty();
+      $('#whosTurn').text("New Game!");
+    }
+  })
+
+  dbRefPlayer1.on('value', snap=>{
+    player1Choice = snap.val();
+    const div = document.createElement('div');
+    div.innerText = 'Player 1 Chose: ' +snap.val();
+    $('#player1').empty();
+    $('#player1').append(div);
+  })
+
+  dbRefPlayer2.on('value', snap=>{
+    player2Choice = snap.val();
+    const div = document.createElement('div');
+    div.innerText = 'Player 2 Chose: ' +snap.val();
+    $('#player2').empty();
+    $('#player2').append(div);
+  })
+
+var updateScore = function(){
+  $('#wins').text('Wins: '+wins);
+  $('#losses').text('Losses: '+losses);
+  $('#ties').text('Ties: '+ties);
+}
+
+updateScore();
+
+$('#newGame').click(function(){
+  dbRefPlayer1.set("");
+  dbRefPlayer2.set("");
+  dbRefPlayer1Turn.set(false);
+  dbRefPlayer2Turn.set(false);
+  dbRefResetGameP1.set(true);
+  $('#playerChoices').hide();
+  $('#rock').css('visibility', 'visible');
+  $('#paper').css('visibility', 'visible');
+  $('#scissors').css('visibility', 'visible');
+});
+
+dbRefResetGameP2.on('value', snap=>{
+  if(snap.val()==true){
+    dbRefPlayer1.set("");
+    dbRefPlayer2.set("");
+    dbRefPlayer1Turn.set(false);
+    dbRefPlayer2Turn.set(false);
+    dbRefResetGameP1.set(false);
+    dbRefResetGameP2.set(false);
+    $('#playerChoices').hide();
+    $('#rock').css('visibility', 'visible');
+    $('#paper').css('visibility', 'visible');
+    $('#scissors').css('visibility', 'visible');
+  }
+})
+</script>
+</html>
